@@ -1,0 +1,17 @@
+telegram:
+  bot: 123456778:Aabckjssjkajkdhhjdhjshjshjsjhjhsjhsjh
+
+app:
+ profile_dir: profiles
+ fonts_dir: fonts
+ fonts:
+    dejavu: fonts/DejaVuSans.ttf
+    courier: fonts/Courier_New_Bold.ttf
+    times: fonts/Times_New_Roman_Bold.ttf
+ admins:
+  - 1234567788
+
+ai:
+  threads_per_client: 5
+  threads_per_admin: 25
+
