@@ -1,5 +1,5 @@
 telegram:
-  bot: 123456778:Aabckjssjkajkdhhjdhjshjshjsjhjhsjhsjh
+  bot: ""  # bot token
 
 app:
  profile_dir: profiles
@@ -8,9 +8,7 @@ app:
     dejavu: fonts/DejaVuSans.ttf
     courier: fonts/Courier_New_Bold.ttf
     times: fonts/Times_New_Roman_Bold.ttf
- admins:
-  - 1234567788
-
+ admins: [] # ids of admins
 ai:
   threads_per_client: 5
   threads_per_admin: 25

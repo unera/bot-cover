@@ -39,14 +39,15 @@ type Dialog struct {
 
 	context context.Context
 
-	lastSent time.Time
+	lastSent     time.Time
+	sendInterval time.Duration
 }
 
 func (d *Dialog) rateLimitCheck() {
 	now := time.Now()
 
-	if now.Sub(d.lastSent) < 10*time.Millisecond {
-		pause := 10*time.Millisecond - now.Sub(d.lastSent)
+	if now.Sub(d.lastSent) < d.sendInterval {
+		pause := d.sendInterval - now.Sub(d.lastSent)
 		time.Sleep(pause)
 	}
 	d.lastSent = now
@@ -62,8 +63,8 @@ func dialogByUpdate(b *bot.Bot, update *models.Update, opts ...Option) *Dialog {
 		return nil
 	}
 	d := &Dialog{
-		id: fmt.Sprintf("%p:[%d]:[%d]",
-			b, update.Message.Chat.ID, update.Message.From.ID),
+		id: fmt.Sprintf("bot-%d:chat-%d:user-%d",
+			b.ID(), update.Message.Chat.ID, update.Message.From.ID),
 		inactiveTimeout: 900,
 		bot:             b,
 		chatID:          update.Message.Chat.ID,
@@ -78,7 +79,7 @@ func dialogByUpdate(b *bot.Bot, update *models.Update, opts ...Option) *Dialog {
 }
 
 func (d *Dialog) run(ctx context.Context) {
-	log.Printf("Run new dialog goroutine: %s", d.id)
+	log.Printf("Run new dialog goroutine (%s)", d.id)
 
 	cache := ctx.Value(cacheKey).(map[string]*Dialog)
 	mutex := ctx.Value(mutexKey).(*sync.Mutex)
@@ -100,18 +101,18 @@ func (d *Dialog) run(ctx context.Context) {
 		delete(cache, d.id)
 		mutex.Unlock()
 		if d.profileStorer != nil {
-			err = d.profileStorer("bot", d.chatID, d.userID, profile, d.profileStorerOpts...)
+			err = d.profileStorer(d.bot.ID(), d.chatID, d.userID, profile, d.profileStorerOpts...)
 			if err != nil {
 				log.Printf("Error while write profile (%d:%d): %s",
 					d.chatID, d.userID, err)
 			}
 		}
 
-		log.Printf("Finished dialog goroutine: %s", d.id)
+		log.Printf("Finished dialog goroutine (%s)", d.id)
 	}()
 
 	if d.profileLoader != nil {
-		profile, err = d.profileLoader("bot", d.chatID, d.userID, d.profileLoaderOpts...)
+		profile, err = d.profileLoader(d.bot.ID(), d.chatID, d.userID, d.profileLoaderOpts...)
 		if err != nil {
 			panic(err)
 		}

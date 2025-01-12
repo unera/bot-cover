@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"fmt"
 	"log"
 	"os"
@@ -22,9 +24,9 @@ type ImageLabel struct {
 // Profile for user
 type Profile struct {
 	Telegram struct {
-		BotID  string `yaml:"bot_id"`
-		UserID int64  `yaml:"id"`
-		ChatID int64  `yaml:"chat_id"`
+		BotID  int64 `yaml:"bot_id"`
+		UserID int64 `yaml:"id"`
+		ChatID int64 `yaml:"chat_id"`
 	} `yaml:"telegram"`
 
 	Task struct {
@@ -44,6 +46,13 @@ type Profile struct {
 		Width  int        `yaml:"width" default:"680"`
 		Height int        `yaml:"height" default:"1024"`
 	}
+
+	CheckSum string `yaml:"-"`
+}
+
+// IsChanged checks if profile was changed
+func (p *Profile) IsChanged() bool {
+	return p.CheckSum != p.CalcCheckSum()
 }
 
 // Bytes serialize profile
@@ -61,10 +70,16 @@ func (p *Profile) String() string {
 
 // BaseName returns name for database
 func (p *Profile) BaseName() string {
-	return fmt.Sprintf("%s-%d-%d.yaml", p.Telegram.BotID, p.Telegram.ChatID, p.Telegram.UserID)
+	return fmt.Sprintf("bot-%d.chat-%d.user-%d.yaml", p.Telegram.BotID, p.Telegram.ChatID, p.Telegram.UserID)
 }
 
-func profileLoader(botID string, chatID int64, userID int64, opts ...any) (any, error) {
+// CalcCheckSum sum for avoid rewriting
+func (p *Profile) CalcCheckSum() string {
+	hash := md5.Sum([]byte(p.String()))
+	return hex.EncodeToString(hash[:])
+}
+
+func profileLoader(botID int64, chatID int64, userID int64, opts ...any) (any, error) {
 
 	profile := new(Profile)
 
@@ -84,12 +99,18 @@ func profileLoader(botID string, chatID int64, userID int64, opts ...any) (any, 
 	profile.Telegram.ChatID = chatID
 	profile.Telegram.UserID = userID
 
+	profile.CheckSum = profile.CalcCheckSum()
 	return profile, nil
 }
 
-func profileStorer(botID string, chatID int64, userID int64, profileA any, opts ...any) error {
+func profileStorer(botID int64, chatID int64, userID int64, profileA any, opts ...any) error {
 
 	profile := profileA.(*Profile)
+
+	if !profile.IsChanged() {
+		return nil
+	}
+
 	fileName := filepath.Join(opts[0].(string), profile.BaseName())
 	progressName := fmt.Sprintf("%s.inprogress", fileName)
 

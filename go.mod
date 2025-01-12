@@ -3,7 +3,8 @@ module github.com/unera/bot-cover
 go 1.22.1
 
 require (
-	github.com/go-telegram/bot v1.12.1 // indirect
+	github.com/go-telegram/bot v1.13.2 // indirect
+	github.com/kelseyhightower/envconfig v1.4.0 // indirect
 	github.com/kr/fs v0.1.0 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect

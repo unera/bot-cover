@@ -2,9 +2,9 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"os/signal"
+	"time"
 
 	_ "embed"
 
@@ -12,19 +12,10 @@ import (
 	"github.com/unera/bot-cover/dialog"
 )
 
-func usage() {
-	fmt.Printf("Usage: %s path/to/config.yaml\n", os.Args[0])
-}
-
 // Send any text message to the bot after the bot has been started
 func main() {
 
-	if len(os.Args) < 2 {
-		usage()
-		os.Exit(-1)
-	}
-
-	cfg := loadConfig(os.Args[1])
+	cfg := loadConfig(os.Args[1:]...)
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
@@ -44,9 +35,9 @@ func main() {
 			coverDialog(d, profile, texts, cfg)
 		}),
 		dialog.WithInactiveTimeout(900),
-
 		dialog.WithProfileLoader(profileLoader, cfg.App.ProfileDir),
 		dialog.WithProfileStorer(profileStorer, cfg.App.ProfileDir),
+		dialog.WithRateLimit(time.Second / time.Duration(cfg.Telegram.SendRPSLimi)),
 	}
 
 	ctx = dialog.InstallRootDialog(ctx, b, opts...)

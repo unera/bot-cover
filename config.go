@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
+	"github.com/kelseyhightower/envconfig"
 	"github.com/mcuadros/go-defaults"
 	"gopkg.in/yaml.v3"
 )
@@ -10,33 +12,37 @@ import (
 // Config application
 type Config struct {
 	Telegram struct {
-		Bot string `yaml:"bot"`
+		Bot         string `yaml:"bot" envconfig:"BOT_TOKEN"`
+		SendRPSLimi int    `yaml:"send_rps_limit" default:"10" envconfig:"BOT_RATE_LIMIT"`
 	} `yaml:"telegram"`
 
 	App struct {
-		ProfileDir string            `yaml:"profile_dir" default:"profiles"`
-		FontsDir   string            `yaml:"fonts_dir" default:"fonts"`
-		Admins     []int64           `yaml:"admins,omitempty"`
-		Fonts      map[string]string `yaml:"fonts,omitempty"`
+		ProfileDir string            `yaml:"profile_dir" default:"profiles" envconfig:"BOT_PROFILE_DIR"`
+		FontsDir   string            `yaml:"fonts_dir" default:"fonts" envconfig:"BOT_FONTS_DIR"`
+		Admins     []int64           `yaml:"admins,omitempty" envconfig:"BOT_ADMINS"`
+		Fonts      map[string]string `yaml:"fonts,omitempty" envconfig:"BOT_FONT_DIR"`
 	} `yaml:"app"`
 
 	AI struct {
-		ThreadsPerClient int `yaml:"threads_per_client" default:"5"`
-		ThreadsPerAdmin  int `yaml:"threads_per_admin" default:"25"`
+		ThreadsPerClient int `yaml:"threads_per_client" default:"5" envconfig:"BOT_THREADS_PER_CLIENT"`
+		ThreadsPerAdmin  int `yaml:"threads_per_admin" default:"25" envconfig:"BOT_THREADS_PER_ADMIN"`
 	} `yaml:"ai"`
 }
 
-func loadConfig(name string) *Config {
+func loadConfig(name ...string) *Config {
 	cfg := new(Config)
 	defaults.SetDefaults(cfg)
 
-	if cfgData, err := os.ReadFile(name); err != nil {
-		panic(err)
-	} else {
-		if err := yaml.Unmarshal(cfgData, cfg); err != nil {
-			panic(err)
+	for _, n := range name {
+		if cfgData, err := os.ReadFile(n); err != nil {
+			panic(fmt.Sprintf("Can't load file %s: %s", n, err))
+		} else {
+			if err := yaml.Unmarshal(cfgData, cfg); err != nil {
+				panic(fmt.Sprintf("Can't parse file %s: %s", n, err))
+			}
 		}
 	}
+	envconfig.Process("", cfg)
 	return cfg
 }
 
