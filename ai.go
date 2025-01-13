@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math/rand"
 	"mime/multipart"
 	"net/http"
 	"net/textproto"
@@ -78,12 +79,14 @@ func (c *AIClient) genImage(profile *Profile) ([]byte, error) {
 		return nil, err
 	}
 
+	log.Printf("Модель получена %d (%d)", c.ModelID, profile.Telegram.UserID)
+
 	task, err := c.runAI(profile)
 	if err != nil {
 		return nil, err
 	}
 
-	return c.waitTask(task, 24)
+	return c.waitTask(task, profile, c.cfg.AI.WaitTimeout)
 }
 
 // GenImages generate some images
@@ -187,7 +190,6 @@ func (c *AIClient) runAI(profile *Profile) (string, error) {
 
 	aiReq.Width = profile.Image.Width
 	aiReq.Height = profile.Image.Height
-	aiReq.GenerateParams.Query = "космический корабль"
 	aiReq.NegativePrompt = profile.Task.Negative
 	aiReq.GenerateParams.Query = profile.Task.Positive
 
@@ -243,58 +245,77 @@ func (c *AIClient) runAI(profile *Profile) (string, error) {
 		return "", fmt.Errorf("Non initial status for task: %v", runRes)
 	}
 
+	log.Printf("Задание составлено: %v (%d)", runRes, profile.Telegram.UserID)
+
 	return runRes.TaskID, nil
 }
 
-func (c *AIClient) waitTask(task string, attempts int) ([]byte, error) {
+func (c *AIClient) waitTask(task string, profile *Profile, timeout int) ([]byte, error) {
 
-	if attempts <= 0 {
-		return nil, fmt.Errorf("Timeout exceeded")
-	}
-	time.Sleep(time.Second * 5)
-	var (
-		decoder *json.Decoder
-		ws      AIWaitResponse
-	)
+	started := time.Now()
 
-	url := fmt.Sprintf("https://api-key.fusionbrain.ai/key/api/v1/text2image/status/%s", task)
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, fmt.Errorf("Cant make http-request: %s", err)
-	}
-	req.Header.Add("X-Key", fmt.Sprintf("Key %s", c.Key))
-	req.Header.Add("X-Secret", fmt.Sprintf("Secret %s", c.Secret))
-	resp, err := c.http.Do(req)
-	if err != nil {
-		goto repeat
-	}
-	switch resp.StatusCode {
-	case 401:
-		return nil, fmt.Errorf("wrong key or secret")
-	case 200:
-	default:
-		goto repeat
-	}
+	for attempt := 0; ; attempt++ {
+		now := time.Now()
 
-	ws = AIWaitResponse{}
-	decoder = json.NewDecoder(resp.Body)
-	if err := decoder.Decode(&ws); err != nil {
-		goto repeat
-	}
-
-	switch ws.Status {
-	case "INITIAL", "PROCESSING":
-		goto repeat
-
-	case "FAIL":
-		return nil, fmt.Errorf("Can't generate image: %s", ws.Error)
-	case "DONE":
-		if ws.Censored {
-			return nil, fmt.Errorf("Цензура не пропустила")
+		if now.Sub(started) > time.Duration(timeout) {
+			break
 		}
-		return ws.Images[0], nil
+
+		time.Sleep(time.Second*1 + time.Duration(rand.Intn(8)))
+		// if attempt > 0 {
+		// log.Printf("Продолжаем ожидать %d (%3.2f)",
+		// profile.Telegram.UserID,
+		// float64(attempt)*100/float64(attempts))
+		// }
+		var (
+			decoder *json.Decoder
+			ws      AIWaitResponse
+		)
+
+		url := fmt.Sprintf("https://api-key.fusionbrain.ai/key/api/v1/text2image/status/%s", task)
+		req, err := http.NewRequest("GET", url, nil)
+		if err != nil {
+			return nil, fmt.Errorf("Cant make http-request: %s", err)
+		}
+		req.Header.Add("X-Key", fmt.Sprintf("Key %s", c.Key))
+		req.Header.Add("X-Secret", fmt.Sprintf("Secret %s", c.Secret))
+		resp, err := c.http.Do(req)
+		if err != nil {
+			continue
+		}
+		switch resp.StatusCode {
+		case 401:
+			return nil, fmt.Errorf("wrong key or secret")
+		case 200:
+		default:
+			log.Printf("Код ответа ожидания не 200: %d (%d)",
+				resp.StatusCode, profile.Telegram.UserID)
+			continue
+		}
+
+		ws = AIWaitResponse{}
+		decoder = json.NewDecoder(resp.Body)
+		if err := decoder.Decode(&ws); err != nil {
+			continue
+		}
+
+		switch ws.Status {
+		case "INITIAL":
+			continue
+		case "PROCESSING":
+			continue
+
+		case "FAIL":
+			return nil, fmt.Errorf("Can't generate image: %s", ws.Error)
+		case "DONE":
+			if ws.Censored {
+				return nil, fmt.Errorf("Цензура не пропустила")
+			}
+			return ws.Images[0], nil
+		default:
+			log.Printf("Неизвестный статус задачи %s (%d)", ws.Status, profile.Telegram.UserID)
+		}
 	}
 
-repeat:
-	return c.waitTask(task, attempts-1)
+	return nil, fmt.Errorf("Timeout exceeded")
 }

@@ -17,5 +17,6 @@ RUN git clone https://github.com/unera/bot-cover.git src
 RUN cd src && go build
 RUN mv src/bot-cover bin/bot
 RUN ln -s src/fonts .
+RUN cp src/config.example.yaml config.yaml
 ENTRYPOINT bash
-ENTRYPOINT bot
+ENTRYPOINT bot config.yaml

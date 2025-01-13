@@ -24,8 +24,9 @@ type Config struct {
 	} `yaml:"app"`
 
 	AI struct {
-		ThreadsPerClient int `yaml:"threads_per_client" default:"5" envconfig:"BOT_THREADS_PER_CLIENT"`
+		ThreadsPerClient int `yaml:"threads_per_client" default:"6" envconfig:"BOT_THREADS_PER_CLIENT"`
 		ThreadsPerAdmin  int `yaml:"threads_per_admin" default:"25" envconfig:"BOT_THREADS_PER_ADMIN"`
+		WaitTimeout      int `yaml:"wait_timeout" default:"180" envconfig:"BOT_AI_TIMEOUT"`
 	} `yaml:"ai"`
 }
 
