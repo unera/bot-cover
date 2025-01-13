@@ -287,6 +287,10 @@ func coverDialog(
 		switch value := d.GetText(); value {
 		case "/ok":
 		default:
+			if len(value) > 1000 {
+				d.SendHTML(texts.Make("too_long_text", len(value)))
+				return
+			}
 			if text == "/ai_task" {
 				profile.Task.Positive = value
 			} else {
