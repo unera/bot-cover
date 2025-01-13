@@ -257,7 +257,7 @@ func (c *AIClient) waitTask(task string, profile *Profile, timeout int) ([]byte,
 	for attempt := 0; ; attempt++ {
 		now := time.Now()
 
-		if now.Sub(started) > time.Duration(timeout) {
+		if now.Sub(started) > time.Duration(timeout)*time.Second {
 			break
 		}
 
