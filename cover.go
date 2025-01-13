@@ -89,7 +89,10 @@ func coverDialog(
 	reKey := regexp.MustCompile("^[0-9a-fA-F]{32}$")
 
 	switch text {
-	case "/start", "/status":
+	case "/start":
+		d.SendHTML(texts.Make("first_start", profile))
+		return
+	case "/status":
 		d.SendHTML(texts.Make("start", profile))
 		return
 	case "/width", "/height":
