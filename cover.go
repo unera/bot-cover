@@ -358,6 +358,10 @@ func coverDialog(
 		}
 
 		return
+	case "/faq":
+		d.SendHTML(texts.Make("faq", profile))
+		return
+
 	}
 
 	d.SendHTML(texts.Make("error", nil))
