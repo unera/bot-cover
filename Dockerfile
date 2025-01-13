@@ -8,7 +8,7 @@ RUN apt-get -yq install \
 	tree \
 	sudo \
 	tzdata
-RUN echo Europe/Moscow > /etc/timezone
+ENV TZ=Europe/Moscow
 
 WORKDIR /cover-bot
 ENV GOPATH=/cover-bot/go
