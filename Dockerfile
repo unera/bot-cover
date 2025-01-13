@@ -6,7 +6,9 @@ RUN apt-get -yq install \
 	git \
 	libmagickwand-dev \
 	tree \
-	sudo
+	sudo \
+	tzdata
+RUN echo Europe/Moscow > /etc/timezone
 
 WORKDIR /cover-bot
 ENV GOPATH=/cover-bot/go
