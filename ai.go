@@ -261,7 +261,7 @@ func (c *AIClient) waitTask(task string, profile *Profile, timeout int) ([]byte,
 			break
 		}
 
-		time.Sleep(time.Second*1 + time.Duration(rand.Intn(8)))
+		time.Sleep(time.Second*1 + time.Second*time.Duration(rand.Intn(8)))
 		// if attempt > 0 {
 		// log.Printf("Продолжаем ожидать %d (%3.2f)",
 		// profile.Telegram.UserID,
