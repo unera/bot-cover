@@ -79,8 +79,6 @@ func (c *AIClient) genImage(profile *Profile) ([]byte, error) {
 		return nil, err
 	}
 
-	log.Printf("Модель получена %d (%d)", c.ModelID, profile.Telegram.UserID)
-
 	task, err := c.runAI(profile)
 	if err != nil {
 		return nil, err
@@ -119,8 +117,9 @@ func (c *AIClient) GenImages(profile *Profile) ([][]byte, error) {
 		taskChan <- false
 		go func() {
 			for <-taskChan {
-				log.Printf("Начата генерация одного изображения для пользователя %d",
+				log.Printf("Начата генерация изображения для пользователя %d",
 					profile.Telegram.UserID)
+
 				img, err := c.genImage(profile)
 				resChan <- &iRes{img, err}
 			}
@@ -133,6 +132,10 @@ func (c *AIClient) GenImages(profile *Profile) ([][]byte, error) {
 		res := <-resChan
 		if res.Error != nil {
 			errors = append(errors, res.Error.Error())
+			log.Printf("Ошибка генерации изображения (модель %d) для пользователя %d: %s",
+				c.ModelID,
+				profile.Telegram.UserID,
+				res.Error.Error())
 		} else {
 			images = append(images, res.Image)
 		}
@@ -245,8 +248,6 @@ func (c *AIClient) runAI(profile *Profile) (string, error) {
 		return "", fmt.Errorf("Non initial status for task: %v", runRes)
 	}
 
-	log.Printf("Задание составлено: %v (%d)", runRes, profile.Telegram.UserID)
-
 	return runRes.TaskID, nil
 }
 
@@ -309,7 +310,8 @@ func (c *AIClient) waitTask(task string, profile *Profile, timeout int) ([]byte,
 			return nil, fmt.Errorf("Can't generate image: %s", ws.Error)
 		case "DONE":
 			if ws.Censored {
-				return nil, fmt.Errorf("Цензура не пропустила")
+				return nil, fmt.Errorf("Цензура не пропустила (пользователь %d)",
+					profile.Telegram.UserID)
 			}
 			return ws.Images[0], nil
 		default:
