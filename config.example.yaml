@@ -8,6 +8,9 @@ app:
     dejavu: fonts/DejaVuSans.ttf
     courier: fonts/Courier_New_Bold.ttf
     times: fonts/Times_New_Roman_Bold.ttf
+    comic: fonts/ComicHelvetic_Light.otf
+    terminator: fonts/term_cyr.ttf
+    chekharda: fonts/ChekhardaBoldItalic.ttf
  admins: [] # ids of admins
 ai:
   threads_per_client: 5
