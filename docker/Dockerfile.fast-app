@@ -6,6 +6,6 @@ RUN cd src && go build
 RUN mv src/bot-cover bin/bot
 RUN ln -s src/fonts .
 RUN cp src/config.example.yaml config.yaml
-ENTRYPOINT bash
-ENTRYPOINT bot config.yaml
+ENTRYPOINT [ "bash" ]
+ENTRYPOINT [ "bot", "config.yaml" ]
 
