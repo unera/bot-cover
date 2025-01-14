@@ -8,7 +8,8 @@ RUN apt-get -yq install \
 	tree \
 	sudo \
 	tzdata \
-	make
+	make \
+	procps
 ENV TZ=Europe/Moscow
 
 WORKDIR /cover-bot
