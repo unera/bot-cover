@@ -17,6 +17,9 @@ upload_base_docker: base_docker
 docker:
 	docker build --no-cache $(TAGS) -f docker/Dockerfile.app .
 
+fast-docker:
+	docker build --no-cache $(TAGS) -f docker/Dockerfile.fast-app .
+
 upload_docker: docker 
 	docker push docker.uvw.ru:5000/unera/cover-bot
 
@@ -25,4 +28,5 @@ upload_docker: docker
 	upload_docker \
 	base_docker \
 	upload_base_docker \
+	fast-docker \
 	all

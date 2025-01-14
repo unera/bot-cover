@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cover-bot
+  namespace: cover-bot
+  labels:
+    app: cover-bot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cover-bot
+  template:
+    metadata:
+      labels:
+        app: cover-bot
+    spec:
+      restartPolicy: Always
+      imagePullSecrets:
+      - name: k8s-registry-creds
+      containers:
+      - name: cover-bot
+        image: 217.16.23.115:5000/unera/cover-bot:latest
+        imagePullPolicy: "Always"
+        volumeMounts:
+        - name: unera-bot
+          mountPath: /cover-bot/profiles
+        env:
+        - name: BOT_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: bot-token
+              key: token
+        - name: BOT_ADMINS
+          valueFrom:
+            configMapKeyRef:
+              name: config
+              key: admins
+        - name: BOT_AI_TIMEOUT
+          valueFrom:
+            configMapKeyRef:
+              name: config
+              key: wait_timeout
+        - name: BOT_THREADS_PER_CLIENT
+          valueFrom:
+            configMapKeyRef:
+              name: config
+              key: threads_per_client
+        - name: BOT_THREADS_PER_ADMIN
+          valueFrom:
+            configMapKeyRef:
+              name: config
+              key: threads_per_admin
+      volumes:
+      - name: unera-bot
+        persistentVolumeClaim:
+          claimName: unera-bot
+

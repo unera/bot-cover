@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config
+  namespace: cover-bot
+data:
+  admins: "161161619"
+  wait_timeout: "600"
+  threads_per_client: "20"
+  threads_per_admin: "20"
