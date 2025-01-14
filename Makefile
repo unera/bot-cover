@@ -7,6 +7,9 @@ TAGS := -t docker.uvw.ru:5000/unera/cover-bot \
         -t 217.16.23.115:5000/unera/cover-bot
 
 
+update_version:
+	git describe
+	echo -n `git describe` > version.txt
 
 base_docker:
 	docker build $(CACHE) $(BASE_TAGS) -f docker/Dockerfile.base .
@@ -23,10 +26,14 @@ fast-docker:
 upload_docker: docker 
 	docker push docker.uvw.ru:5000/unera/cover-bot
 
+build:
+	go build
+
 .PHONY: \
 	docker \
 	upload_docker \
 	base_docker \
 	upload_base_docker \
 	fast-docker \
+	build \
 	all

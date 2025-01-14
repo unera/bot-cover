@@ -2,7 +2,7 @@ FROM docker.uvw.ru:5000/unera/cover-bot-base
 
 RUN mkdir config bin go profiles
 RUN git clone https://github.com/unera/bot-cover.git src
-RUN cd src && go build
+RUN make -C src update_version build
 RUN mv src/bot-cover bin/bot
 RUN ln -s src/fonts .
 RUN cp src/config.example.yaml config.yaml
