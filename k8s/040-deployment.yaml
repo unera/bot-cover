@@ -20,7 +20,7 @@ spec:
       - name: k8s-registry-creds
       containers:
       - name: cover-bot
-        image: 217.16.23.115:5000/unera/cover-bot:latest
+        image: docker.uvw.ru:5000/unera/cover-bot:latest
         imagePullPolicy: "Always"
         volumeMounts:
         - name: unera-bot
