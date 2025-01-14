@@ -55,6 +55,9 @@ func (t *predefinedTexts) Make(name string, opts ...any) string {
 			}
 			return string(res), nil
 		},
+		"version": func() (string, error) {
+			return Version, nil
+		},
 	}
 
 	if tpl, ok := t.cache[name]; ok {
