@@ -119,9 +119,11 @@ func profileStorer(botID int64, chatID int64, userID int64, profileA any, opts .
 		err = os.Rename(progressName, fileName)
 		if err != nil {
 			log.Printf("Error write %s: %s", fileName, err)
+			return err
 		}
 	} else {
 		log.Printf("Error write %s: %s", fileName, err)
+		return err
 	}
 
 	return nil
